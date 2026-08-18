@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Meta OAuth callback</title>
+<style>
+ body{font:16px system-ui;max-width:640px;margin:80px auto;padding:0 20px}
+ code{display:block;word-break:break-all;background:#f4f4f5;padding:16px;border-radius:8px;margin:12px 0}
+ button{font:inherit;padding:8px 16px;border-radius:6px;cursor:pointer}
+ .warn{color:#8a1c1c;font-size:14px;margin-top:24px}
+</style>
+<h1>Meta OAuth callback</h1>
+<div id="out">…</div>
+<p class="warn" id="warn" hidden>
+  This is a live credential. Do not paste it into a chat, a ticket, or a screenshot.
+</p>
+<script>
+ // Meta answers response_type=code in the query string and response_type=token in the fragment,
+ // and the Graph API Explorer uses the latter. Reading only location.search — which is all Snap
+ // and TikTok ever need — would show "no code" on exactly the flow we use most.
+ const q = new URLSearchParams(location.search);
+ const h = new URLSearchParams(location.hash.slice(1));
+ const code = q.get("code");
+ const token = h.get("access_token");
+ const err = q.get("error") || h.get("error");
+ const out = document.getElementById("out");
+
+ function show(label, value, secret) {
+   out.innerHTML = "<p>" + label + "</p><code id=c></code>" +
+     "<button onclick=\"navigator.clipboard.writeText(document.getElementById('c').textContent)\">Copy</button>" +
+     "<p>state: " + (q.get("state") || h.get("state") || "—") + "</p>";
+   document.getElementById("c").textContent = value;
+   if (secret) document.getElementById("warn").hidden = false;
+ }
+
+ if (token) {
+   show("Access token (expires in " + (h.get("expires_in") || "?") + "s):", token, true);
+ } else if (code) {
+   show("Authorization code:", code, true);
+ } else if (err) {
+   out.textContent = "Error: " + err + " — " +
+     (q.get("error_description") || h.get("error_description") || "");
+ } else {
+   out.textContent = "Nothing in the URL. Start the OAuth flow and let Meta redirect you here.";
+ }
+</script>
